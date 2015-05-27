@@ -1,0 +1,47 @@
+code	license_type
+AAL	Alarm Agent
+ACH	Adult Care Homes and Facilities
+AEE	Adult Entertainment Enterprises and Establishments
+AEI	Adult Entertainer - Independent
+AEM	Adult Entertainment Employee
+AEU	Adult Entertainer
+AUA	Auctioneer Class A
+AUB	Auctioneer Class B
+AUH	Auction House
+DHE	Dance Hall--Single Event
+DHL	Dance Halls
+DVI	Drive-In Restaurants
+ESB	Escort Bureaus
+ESC	Escorts
+FTL	Fortunetellers
+GOB	Fire sale; going out of business
+ICT	Ice Cream Truck Vendors
+L01	Distiller's License
+L02	Brewer's License
+L03	Winer's License
+L05	Government License
+L06	On Sale All Liquor
+L07	On Sale Beer & Wine
+L09	Off Sale Retailer All Liq
+L10	Off Sale Retailer Beer & Wine
+L11	Hotel/Motel License--All liquor
+L12	Restaurant--All liquor
+L14	Club License - All Liquor
+L17	Governmental License--serve/sell liquor on special premises
+L18	Liquor--Special Event
+LEP	Liquor--Extension of Premises
+MAE	Massage Establishments
+PAB	Primary Alarm Business
+PAW	Pawnbrokers & Secondhand Dealers
+PED	Peddlers
+PLL	Privilege License License
+PLN	Non Profit Business
+PLT	Privilege License Tax
+PRT	Promoter
+RAB	Reciprocal Alarm Business
+SCP	Scrap Dealer
+SML	Swap Meets
+SVL	Service License (Occupational)
+TOB	Retail Tobacco Sales
+VMD	Vending Machine Distributor
+VMT	Vending Machine Operator Machines

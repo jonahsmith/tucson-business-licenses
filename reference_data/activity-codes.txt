@@ -1,0 +1,26 @@
+code	activity_category
+1	Transportation
+2	Timbering/Extraction
+3	Mining
+4	Utilities
+5	Communications
+6	RR/Aircraft
+9	Publishing
+10	Job Printing
+11	Restaurants
+12	Amusements
+13	Real Property Rentals
+14	Personal Property Rentals
+15	Construction Contracting
+16	Manufactured Buildings
+17	Retail Sales
+18	Transient Rentals
+19	Swap Meet Proprietors
+20	Public Utilities
+22	# of Taxable Rooms
+25	Contracting Rio Nuevo
+30	Public Utilities 2
+31	Peddler-Food
+37	Peddler-Variety
+98	Use Tax
+99	Use Tax

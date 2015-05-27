@@ -1,0 +1,21 @@
+code	owner_type
+CRP	Corporation
+GEN	General Partnership
+EST	Estate
+TRT	Trust
+REC	Receivership
+UNK	Unknown
+LLP	Ltd Liab Partnership
+LLL	Ltd Liab Ltd Partnership
+LTD	Limited Partnership
+PRT	Partnership
+LMC	Local Municipality
+LLC	Limited Liability Company
+JVT	Joint Venture
+MAR	Married
+SOL	Sole Proprietorship
+NPC	Non-Profit Corporation
+OTH	Other
+SAZ	State of Arizona
+PCY	Pima County
+COT	City of Tucson
