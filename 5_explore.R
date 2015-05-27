@@ -10,6 +10,19 @@ non_corridor <- subset(data, !(dist_to_closest_stop < .003))
 write.table(corridor, "datasets/corridor.csv", sep=",", row.names=FALSE)
 write.table(non_corridor, "datasets/non-corridor.csv", sep=",", row.names=FALSE)
 
+# Try to recover some of the NAs
+corridor$activity_category <- as.character(corridor$activity_category)
+for (i in 1:nrow(corridor)){
+	if (is.na(corridor[i,]$Activity_Code_1)){
+		if (corridor[i,]$License_Type == "PLL"){
+			corridor[i,]$activity_category <- "misc service contractor"
+		} else {
+			corridor[i,]$activity_category <- "misc service business"
+		}
+	}
+}
+corridor$activity_category <- factor(corridor$activity_category)
+
 library("ggmap")
 CenterOfMap <- geocode("Tucson City Hall, AZ")
 tucson_full <- get_googlemap(c(lon=CenterOfMap$lon, lat=CenterOfMap$lat), zoom=14, maptype="roadmap", source="google")
@@ -95,6 +108,9 @@ non_corridor$activity_category <- factor(non_corridor$activity_category)
 c_cats <- table(corridor$activity_category, format(corridor$Accept_Date, "%Y"))
 nc_cats <- table(non_corridor$activity_category, format(non_corridor$Accept_Date, "%Y"))
 
+c_cats2 <- table(corridor$activity_category, as.yearqtr(corridor$Accept_Date))
+ggplot(data=melt(c_cats2, varnames=c("activity", "quarter")), aes(x=quarter, y=value, group=activity, color=activity)) + geom_line()
+
 library("reshape")
 ggplot(data=melt(c_cats, varnames=c("activity", "year")), aes(x=year, y=value, color=activity)) + geom_line()
 ggplot(data=melt(nc_cats, varnames=c("activity", "year")), aes(x=year, y=value, color=activity)) + geom_line()
@@ -125,10 +141,6 @@ for (i in 1:nrow(nc_cats)){
 ggplot(data=melt(c_cats_per[,-5], varnames=c("activity", "year")), aes(x=year, y=value, color=activity)) + geom_line()
 ggplot(data=melt(nc_cats_per[,-5], varnames=c("activity", "year")), aes(x=year, y=value, color=activity)) + geom_line()
 
-## Attempt SVG export
-g <- ggplot(data=melt(c_cats, varnames=c("activity", "year")), aes(x=year, y=value, color=activity)) + geom_line()
-ggsave(plot=g, "test.svg")
-
 library("RSvgDevice")
 
 plot_chart <- function(tab, cat) {
@@ -142,9 +154,9 @@ plot_chart <- function(tab, cat) {
 		bks = 0:2
 		lims = c(0,2)
 	}
-	g <- ggplot(tab, aes(x=year, y=as.integer(value))) + geom_line(color="#B13F00", size=1.25) + labs(x=element_blank(), y=element_blank()) + scale_y_continuous(limits=lims, breaks=bks)
+	g <- ggplot(tab, aes(x=time, y=value)) + geom_line(color="#B13F00", size=1.25) + labs(x=element_blank(), y=element_blank()) + scale_y_continuous(limits=lims, breaks=bks)
 	s <- style()
-	return(g+s)
+	return(g+s+v_lines)
 }
 
 style <- function(){
@@ -152,20 +164,72 @@ style <- function(){
 	return(s)
 }
 
-# This function takes a table with category rows and year 
-svgify <- function(table, directory=""){
+# This function takes a table with category rows and time columns 
+svgify <- function(table, directory="", save=FALSE){
 	names <- row.names(table)
 	for (i in 1:nrow(table)){
 		cat <- names[i]
 		tab <- melt(table[i,])
-		tab <- cbind("year"=row.names(tab), tab)
+		tab <- cbind("time"=row.names(tab), tab)
 		row.names(tab) <- NULL
-		tab$year <- as.integer(as.character(tab$year))
 		g <- plot_chart(tab, cat)
-		devSVG(paste(directory,"/",cat,".svg", sep=""), height=6, width=9)
-		plot(g)
-		dev.off()
+		if (save) {
+			devSVG(paste(directory,"/",cat,".svg", sep=""), height=6, width=9)
+			plot(g)
+			dev.off()
+		} else {
+			plot(g)
+		}
 	}
 }
 
-svgify(c_cats[,-5], "c_charts")
+# for years
+svgify(c_cats, "c_charts")
+
+c(as.yearqtr("2011-1"), as.yearqtr("2012-1"), as.yearqtr("2013-1"), as.yearqtr("2014-1"))
+
+######################
+# Quarters			 #
+######################
+plot_chart <- function(tab, cat) {
+	bks = 0:4
+	lims = c(0,5)
+	g <- ggplot(tab, aes(x=time, y=value, group=1)) + geom_smooth(formula=y~x, size=1, color="#B13F00", se=FALSE) + labs(x=element_blank(), y=element_blank()) + scale_y_continuous(limits=lims, breaks=bks) + scale_x_discrete(breaks=c("2011 Q1", "2012 Q1", "2013 Q1", "2014 Q1", "2015 Q1"), labels = c("2011", "2012", "2013", "2014", "2015"))
+	s <- style()
+	return(g+s+v_lines)
+}
+
+v_lines <- geom_vline(xintercept=c(which(tab$time=="2012 Q2"), which(tab$time=="2014 Q3")))
+
+style <- function(){
+	s <- theme_bw() + theme(panel.border = element_blank(), panel.grid.major.y=element_line(color="gray", size=1), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), axis.line=element_blank(), axis.title=element_blank(), axis.ticks.y=element_blank())
+	return(s)
+}
+
+# This function takes a table with category rows and time columns 
+svgify <- function(table, directory="", save=FALSE){
+	names <- row.names(table)
+	for (i in 1:nrow(table)){
+		cat <- names[i]
+		tab <- melt(table[i,])
+		tab <- cbind("time"=row.names(tab), tab)
+		row.names(tab) <- NULL
+		g <- plot_chart(tab, cat)
+		if (save) {
+			devSVG(paste(directory,"/",cat,".svg", sep=""), height=6, width=9)
+			plot(g)
+			dev.off()
+		} else {
+			plot(g)
+		}
+	}
+}
+
+corridor14 <- subset(corridor, Accept_Date < as.Date("2015-4-1"))
+c_catsq <- table(corridor14$activity_category, as.yearqtr(corridor14$Accept_Date))
+svgify(c_catsq, "cq_charts", TRUE)
+
+tab <- melt(c_cats2[2,])
+tab <- cbind("time"=row.names(tab), tab)
+row.names(tab) <- NULL
+ggplot(tab, aes(x=time, y=value, group=1)) + geom_smooth(formula=y~x, size=1) + labs(x=element_blank(), y=element_blank())
