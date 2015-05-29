@@ -1,10 +1,20 @@
+library("RSvgDevice")
+library("ggmap")
+library("zoo")
+library("reshape")
+
 data <- read.csv("datasets/with_closest_stop.csv")
 data$Accept_Date <- as.Date(data$Accept_Date)
 interesting_activities <- c(11,12,17,31,37)
 
+
 # Let's define the corridor to be a radius of .003 from the stops. Looks reasonable on the maps.
 corridor <- subset(data, dist_to_closest_stop < .003)
+corridor$activity_category <- factor(corridor$activity_category)
+
 non_corridor <- subset(data, !(dist_to_closest_stop < .003))
+non_corridor$activity_category <- factor(non_corridor$activity_category)
+
 
 # Just for future reference
 write.table(corridor, "datasets/corridor.csv", sep=",", row.names=FALSE)
@@ -21,9 +31,7 @@ for (i in 1:nrow(corridor)){
 		}
 	}
 }
-corridor$activity_category <- factor(corridor$activity_category)
 
-library("ggmap")
 CenterOfMap <- geocode("Tucson City Hall, AZ")
 tucson_full <- get_googlemap(c(lon=CenterOfMap$lon, lat=CenterOfMap$lat), zoom=14, maptype="roadmap", source="google")
 ggmap(tucson_full) + geom_point(data=corridor, aes(x = lon, y = lat, color = activity_category), alpha = .5)
@@ -102,9 +110,6 @@ axis(4)
 #############################################
 # 			Categories over time				#
 #############################################
-corridor$activity_category <- factor(corridor$activity_category)
-non_corridor$activity_category <- factor(non_corridor$activity_category)
-
 c_cats <- table(corridor$activity_category, format(corridor$Accept_Date, "%Y"))
 nc_cats <- table(non_corridor$activity_category, format(non_corridor$Accept_Date, "%Y"))
 
@@ -140,8 +145,6 @@ for (i in 1:nrow(nc_cats)){
 
 ggplot(data=melt(c_cats_per[,-5], varnames=c("activity", "year")), aes(x=year, y=value, color=activity)) + geom_line()
 ggplot(data=melt(nc_cats_per[,-5], varnames=c("activity", "year")), aes(x=year, y=value, color=activity)) + geom_line()
-
-library("RSvgDevice")
 
 plot_chart <- function(tab, cat) {
 	if (max(tab$value) > 10) {
@@ -196,10 +199,12 @@ plot_chart <- function(tab, cat) {
 	lims = c(0,5)
 	g <- ggplot(tab, aes(x=time, y=value, group=1)) + geom_smooth(formula=y~x, size=1, color="#B13F00", se=FALSE) + labs(x=element_blank(), y=element_blank()) + scale_y_continuous(limits=lims, breaks=bks) + scale_x_discrete(breaks=c("2011 Q1", "2012 Q1", "2013 Q1", "2014 Q1", "2015 Q1"), labels = c("2011", "2012", "2013", "2014", "2015"))
 	s <- style()
-	return(g+s+v_lines)
+	return(g+s+v_lines(tab))
 }
 
-v_lines <- geom_vline(xintercept=c(which(tab$time=="2012 Q2"), which(tab$time=="2014 Q3")))
+v_lines <- function(tab) {
+	return(geom_vline(xintercept=c(which(tab$time=="2012 Q2"), which(tab$time=="2014 Q3"))))
+}
 
 style <- function(){
 	s <- theme_bw() + theme(panel.border = element_blank(), panel.grid.major.y=element_line(color="gray", size=1), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), axis.line=element_blank(), axis.title=element_blank(), axis.ticks.y=element_blank())
@@ -229,7 +234,14 @@ corridor14 <- subset(corridor, Accept_Date < as.Date("2015-4-1"))
 c_catsq <- table(corridor14$activity_category, as.yearqtr(corridor14$Accept_Date))
 svgify(c_catsq, "cq_charts", TRUE)
 
-tab <- melt(c_cats2[2,])
+tab <- melt(c_catsq[6,])
 tab <- cbind("time"=row.names(tab), tab)
 row.names(tab) <- NULL
+ggplot(tab, aes(x=time, y=value, group=1)) + geom_smooth(formula=y~x, size=1, se=FALSE) + labs(x=element_blank(), y=element_blank()) + geom_point(x=which(tab$time=="2011 Q1"), y=4.23)
+ggplot(tab, aes(x=time, y=value, group=1)) + geom_smooth(formula=y~x, size=1, color="#B13F00", se=FALSE) + labs(x=element_blank(), y=element_blank()) + scale_x_discrete(breaks=c("2011 Q1", "2012 Q1", "2013 Q1", "2014 Q1", "2015 Q1"), labels = c("2011", "2012", "2013", "2014", "2015")) + scale_y_continuous(limits=c(0,5), breaks=0:4) + geom_point(x=which(tab$time=="2015 Q1"), y=3.44)
+
+
+ggplot(tab, aes(x=time, y=value, group=1)) + geom_smooth(formula=y~x, size=1, se=FALSE) + labs(x=element_blank(), y=element_blank()) + geom_point(x=which(tab$time=="2015 Q1"), y=2.93)
+# real prop rentals: 4; restaurants: 5; retail sales: 6
+
 ggplot(tab, aes(x=time, y=value, group=1)) + geom_smooth(formula=y~x, size=1) + labs(x=element_blank(), y=element_blank())
